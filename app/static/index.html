@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6fa">
+  <title>Documents | Papertrail</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d2433;
+      --muted: #788196;
+      --line: #e8ebf1;
+      --surface: #fff;
+      --canvas: #f5f6fa;
+      --purple: #6747e8;
+      --purple-light: #f0edff;
+      --navy: #20233a;
+      --green: #16835d;
+      --red: #c34242;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+    .sidebar { display: flex; flex-direction: column; padding: 28px 18px 20px; background: var(--navy); color: #fff; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 10px 38px; font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+    .brand-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: #7458ee; font-size: 20px; }
+    .side-label { margin: 0 10px 12px; color: #9298b2; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+    .side-link { display: flex; align-items: center; gap: 12px; margin: 3px 0; padding: 11px 12px; border-radius: 9px; color: #b6bad0; font-size: 13px; text-decoration: none; }
+    .side-link.active { background: #343650; color: #fff; }
+    .side-link .icon { width: 18px; text-align: center; font-size: 16px; }
+    .sidebar-spacer { flex: 1; }
+    .storage-card { padding: 14px; border: 1px solid #41435b; border-radius: 12px; color: #c9cbe0; font-size: 11px; line-height: 1.6; }
+    .storage-card strong { display: block; margin-bottom: 4px; color: #fff; font-size: 12px; }
+    .storage-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #55c99b; }
+    .main { min-width: 0; padding: 0 42px 48px; }
+    .topbar { display: flex; height: 74px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--ink); font-weight: 600; }
+    .top-right { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 12px; }
+    .avatar { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: #e6e1ff; color: #5638cd; font-weight: 700; }
+    .page { max-width: 1280px; margin: 0 auto; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 34px 0 24px; }
+    h1 { margin: 0; font-size: 25px; letter-spacing: -.7px; }
+    .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+    .button { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font-size: 12px; font-weight: 600; }
+    .button:hover { border-color: #c9c2ed; }
+    .button-primary { border-color: var(--purple); background: var(--purple); color: #fff; }
+    .button-primary:hover { border-color: #5639d3; background: #5639d3; }
+    .button-danger { color: var(--red); }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat { display: flex; min-height: 96px; align-items: center; justify-content: space-between; padding: 18px 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .stat-label { color: var(--muted); font-size: 11px; }
+    .stat-value { display: block; margin-top: 6px; font-size: 23px; font-weight: 700; letter-spacing: -.5px; }
+    .stat-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; background: var(--purple-light); color: var(--purple); font-size: 17px; }
+    .table-card { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .table-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .table-heading h2 { margin: 0; font-size: 14px; }
+    .table-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .filters { display: flex; align-items: center; gap: 9px; }
+    .control { height: 35px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; outline: none; background: #fff; color: var(--ink); font-size: 11px; }
+    .control:focus, .form-control:focus { border-color: #a99aef; box-shadow: 0 0 0 3px #eeeaff; }
+    .search { width: 190px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 12px 16px; background: #fafbfc; color: #8a91a1; font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 14px 16px; border-top: 1px solid #f0f1f5; color: #555e70; font-size: 11px; white-space: nowrap; }
+    tbody tr:hover { background: #fcfcfe; }
+    .doc-name { max-width: 230px; overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 600; text-overflow: ellipsis; }
+    .doc-meta { margin-top: 4px; overflow: hidden; color: #9399a8; font-size: 10px; text-overflow: ellipsis; }
+    .category { display: inline-block; padding: 5px 8px; border-radius: 6px; background: #f3f4f8; color: #646d7e; font-size: 10px; }
+    .status { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 99px; font-size: 9px; font-weight: 700; }
+    .status::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; }
+    .status-received { background: #fff5e5; color: #bd7c15; }
+    .status-processing { background: #edf3ff; color: #4774d2; }
+    .status-available { background: #e8f7f0; color: #16835d; }
+    .status-archived { background: #f0f1f4; color: #737b89; }
+    .status-failed { background: #fff0ef; color: #c34242; }
+    .row-actions { display: flex; align-items: center; gap: 6px; }
+    .icon-button { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #778094; text-decoration: none; }
+    .icon-button:hover { border-color: var(--line); background: #fff; color: var(--purple); }
+    .status-select { max-width: 122px; height: 28px; padding: 0 5px; border: 1px solid var(--line); border-radius: 6px; background: white; color: #60697a; font-size: 9px; }
+    .empty { padding: 54px 20px; color: var(--muted); text-align: center; font-size: 12px; }
+    .empty strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 14px; }
+    .footer-note { padding: 13px 18px; border-top: 1px solid var(--line); color: #9298a7; font-size: 10px; }
+    dialog { width: min(520px, calc(100% - 28px)); max-height: 90vh; padding: 0; border: 0; border-radius: 14px; box-shadow: 0 25px 80px #1c214033; }
+    dialog::backdrop { background: #15182a80; backdrop-filter: blur(2px); }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 21px 23px 16px; border-bottom: 1px solid var(--line); }
+    .dialog-head h2 { margin: 0; font-size: 17px; }
+    .dialog-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .close-button { border: 0; background: transparent; color: #81899a; font-size: 20px; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 23px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-wide { grid-column: 1 / -1; }
+    .field label { color: #596173; font-size: 10px; font-weight: 650; }
+    .form-control { width: 100%; min-height: 37px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; outline: none; background: #fff; color: var(--ink); font-size: 11px; }
+    textarea.form-control { min-height: 70px; resize: vertical; }
+    .file-hint { color: var(--muted); font-size: 9px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 23px; border-top: 1px solid var(--line); }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 3; max-width: min(420px, calc(100vw - 32px)); padding: 12px 16px; border-radius: 9px; background: #25283c; box-shadow: 0 8px 25px #20233a33; color: #fff; font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: #9c3333; }
+    .loading { color: var(--muted); text-align: center; }
+    @media (max-width: 1000px) {
+      .app { grid-template-columns: 205px minmax(0, 1fr); }
+      .main { padding-right: 24px; padding-left: 24px; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .table-heading { align-items: flex-start; flex-direction: column; }
+      .filters { width: 100%; flex-wrap: wrap; }
+      .search { flex: 1; }
+    }
+    @media (max-width: 640px) {
+      .app { display: block; }
+      .sidebar { display: none; }
+      .main { padding: 0 15px 28px; }
+      .topbar { height: 58px; }
+      .page-heading { align-items: flex-start; flex-direction: column; padding: 25px 0 18px; }
+      .page-heading .button { width: 100%; }
+      .stats { gap: 9px; }
+      .stat { min-height: 78px; padding: 12px; }
+      .stat-value { font-size: 20px; }
+      .stat-icon { width: 31px; height: 31px; }
+      .filters { display: grid; grid-template-columns: 1fr 1fr; }
+      .search { width: 100%; grid-column: 1 / -1; }
+      .form { grid-template-columns: 1fr; }
+      .field-wide { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon">▤</span><span>Papertrail</span></div>
+      <p class="side-label">Workspace</p>
+      <a class="side-link active" href="/"><span class="icon">▦</span>Documents</a>
+      <a class="side-link" href="/docs"><span class="icon">⌘</span>API documentation</a>
+      <div class="sidebar-spacer"></div>
+      <div class="storage-card"><strong><span class="storage-dot"></span>Service connected</strong>Document records are stored in the local database.</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb">Workspace <span aria-hidden="true"> / </span> <strong>Documents</strong></div>
+        <div class="top-right"><span id="today"></span><span class="avatar" aria-label="Workspace">D</span></div>
+      </header>
+
+      <section class="page">
+        <div class="page-heading">
+          <div><h1>Document workspace</h1><p class="subtitle">Organize, track, and retrieve your team's documents.</p></div>
+          <button class="button button-primary" id="add-document"><span aria-hidden="true">＋</span> Add document</button>
+        </div>
+
+        <div class="stats" aria-label="Document summary">
+          <article class="stat"><div><span class="stat-label">Total documents</span><strong class="stat-value" id="stat-total">—</strong></div><span class="stat-icon">▤</span></article>
+          <article class="stat"><div><span class="stat-label">In progress</span><strong class="stat-value" id="stat-processing">—</strong></div><span class="stat-icon">◷</span></article>
+          <article class="stat"><div><span class="stat-label">Available</span><strong class="stat-value" id="stat-available">—</strong></div><span class="stat-icon">✓</span></article>
+          <article class="stat"><div><span class="stat-label">Categories</span><strong class="stat-value" id="stat-categories">—</strong></div><span class="stat-icon">◇</span></article>
+        </div>
+
+        <section class="table-card">
+          <div class="table-heading">
+            <div><h2>All documents</h2><p id="result-count">Loading your documents…</p></div>
+            <div class="filters">
+              <input class="control search" id="search" type="search" placeholder="Search documents…" aria-label="Search documents">
+              <select class="control" id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+              <select class="control" id="status-filter" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                <option value="RECEIVED">Received</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="AVAILABLE">Available</option>
+                <option value="ARCHIVED">Archived</option>
+                <option value="FAILED">Failed</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Document</th><th>Category</th><th>Source</th><th>Date added</th><th>Status</th><th>Change status</th><th>Actions</th></tr></thead>
+              <tbody id="documents-body"></tbody>
+            </table>
+            <div class="empty" id="empty-state" hidden><strong>No documents found</strong>Try changing your filters or add a new document.</div>
+          </div>
+          <div class="footer-note">Your document records are saved locally and remain available after restarting the service.</div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="document-dialog">
+    <form class="form" id="document-form">
+      <div class="dialog-head field-wide">
+        <div><h2 id="dialog-title">Add a document</h2><p id="dialog-description">Enter document details or attach a file.</p></div>
+        <button class="close-button" id="close-dialog" type="button" aria-label="Close dialog">×</button>
+      </div>
+      <div class="field field-wide"><label for="title">Title *</label><input class="form-control" id="title" name="title" maxlength="255" required></div>
+      <div class="field"><label for="category">Category *</label><input class="form-control" id="category" name="category" maxlength="100" placeholder="e.g. Finance" required></div>
+      <div class="field"><label for="source">Source *</label><input class="form-control" id="source" name="source" maxlength="150" placeholder="e.g. Email" required></div>
+      <div class="field field-wide"><label for="description">Description</label><textarea class="form-control" id="description" name="description" placeholder="Add helpful context…"></textarea></div>
+      <div class="field"><label for="document-date">Document date</label><input class="form-control" id="document-date" name="document_date" type="datetime-local"></div>
+      <div class="field" id="file-field"><label for="file">Attach a file (optional)</label><input class="form-control" id="file" name="file" type="file" accept=".pdf,.doc,.docx,.txt,.rtf"><span class="file-hint">Allowed: PDF, Word, TXT, RTF</span></div>
+      <div class="dialog-actions field-wide">
+        <button class="button" id="cancel-dialog" type="button">Cancel</button>
+        <button class="button button-primary" id="save-document" type="submit">Save document</button>
+      </div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const API = "/api/documents";
+    const transitions = {
+      RECEIVED: ["PROCESSING"],
+      PROCESSING: ["AVAILABLE", "FAILED"],
+      AVAILABLE: ["ARCHIVED"],
+      ARCHIVED: [],
+      FAILED: []
+    };
+    let documents = [];
+    let toastTimer;
+
+    const byId = (id) => document.getElementById(id);
+    const dialog = byId("document-dialog");
+    const form = byId("document-form");
+
+    function escapeStatus(status) {
+      return String(status || "").toLowerCase().replace(/[^a-z]/g, "");
+    }
+
+    function displayDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function notify(message, error = false) {
+      const toast = byId("toast");
+      toast.textContent = message;
+      toast.classList.toggle("error", error);
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        let message = `Request failed (${response.status})`;
+        try {
+          const payload = await response.json();
+          const detail = payload.detail;
+          message = Array.isArray(detail) ? detail.map((item) => item.msg).join("; ") : (detail || payload.message || message);
+        } catch {
+          message = response.statusText || message;
+        }
+        throw new Error(message);
+      }
+      return response.status === 204 ? null : response.json();
+    }
+
+    function updateSummary() {
+      byId("stat-total").textContent = documents.length;
+      byId("stat-processing").textContent = documents.filter((item) => item.status === "PROCESSING").length;
+      byId("stat-available").textContent = documents.filter((item) => item.status === "AVAILABLE").length;
+      byId("stat-categories").textContent = new Set(documents.map((item) => item.category)).size;
+
+      const categorySelect = byId("category-filter");
+      const selectedCategory = categorySelect.value;
+      const categories = [...new Set(documents.map((item) => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      categorySelect.replaceChildren(new Option("All categories", ""));
+      categories.forEach((category) => categorySelect.add(new Option(category, category)));
+      categorySelect.value = categories.includes(selectedCategory) ? selectedCategory : "";
+    }
+
+    function makeCell(text, className) {
+      const cell = document.createElement("td");
+      if (className) cell.className = className;
+      cell.textContent = text || "—";
+      return cell;
+    }
+
+    function renderDocuments() {
+      const search = byId("search").value.trim().toLowerCase();
+      const category = byId("category-filter").value;
+      const status = byId("status-filter").value;
+      const filtered = documents.filter((item) => {
+        const searchText = `${item.title} ${item.description || ""} ${item.original_filename || ""} ${item.category} ${item.source}`.toLowerCase();
+        return (!search || searchText.includes(search))
+          && (!category || item.category === category)
+          && (!status || item.status === status);
+      });
+
+      const body = byId("documents-body");
+      body.replaceChildren();
+      byId("empty-state").hidden = filtered.length !== 0;
+      byId("result-count").textContent = `${filtered.length} document${filtered.length === 1 ? "" : "s"}`;
+
+      filtered.forEach((item) => {
+        const row = document.createElement("tr");
+        const titleCell = document.createElement("td");
+        const title = document.createElement("div");
+        title.className = "doc-name";
+        title.textContent = item.title;
+        const fileName = document.createElement("div");
+        fileName.className = "doc-meta";
+        fileName.textContent = item.original_filename || item.description || `Document #${item.id}`;
+        titleCell.append(title, fileName);
+        row.append(titleCell, makeCell(item.category));
+
+        const source = makeCell(item.source);
+        row.append(source, makeCell(displayDate(item.created_at)));
+
+        const statusCell = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = `status status-${escapeStatus(item.status)}`;
+        badge.textContent = item.status;
+        statusCell.append(badge);
+        row.append(statusCell);
+
+        const statusCellSelect = document.createElement("td");
+        const select = document.createElement("select");
+        select.className = "status-select";
+        select.setAttribute("aria-label", `Change status for ${item.title}`);
+        const options = [item.status, ...(transitions[item.status] || [])];
+        options.forEach((value) => select.add(new Option(value === item.status ? `Current: ${value}` : `Move to ${value}`, value)));
+        select.addEventListener("change", async () => {
+          if (select.value === item.status) return;
+          try {
+            await request(`${API}/${item.id}/status`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: select.value })
+            });
+            notify(`Status updated to ${select.value}.`);
+            await loadDocuments();
+          } catch (error) {
+            notify(error.message, true);
+            renderDocuments();
+          }
+        });
+        statusCellSelect.append(select);
+        row.append(statusCellSelect);
+
+        const actions = document.createElement("td");
+        const actionGroup = document.createElement("div");
+        actionGroup.className = "row-actions";
+        const edit = document.createElement("button");
+        edit.className = "icon-button";
+        edit.type = "button";
+        edit.title = "Edit document";
+        edit.setAttribute("aria-label", `Edit ${item.title}`);
+        edit.textContent = "✎";
+        edit.addEventListener("click", () => openDialog(item));
+        actionGroup.append(edit);
+        if (item.stored_filename) {
+          const download = document.createElement("a");
+          download.className = "icon-button";
+          download.href = `${API}/${item.id}/file`;
+          download.title = "Download file";
+          download.setAttribute("aria-label", `Download ${item.title}`);
+          download.textContent = "↓";
+          actionGroup.append(download);
+        }
+        const remove = document.createElement("button");
+        remove.className = "icon-button";
+        remove.type = "button";
+        remove.title = "Delete document";
+        remove.setAttribute("aria-label", `Delete ${item.title}`);
+        remove.textContent = "×";
+        remove.addEventListener("click", () => deleteDocument(item));
+        actionGroup.append(remove);
+        actions.append(actionGroup);
+        row.append(actions);
+        body.append(row);
+      });
+    }
+
+    async function loadDocuments() {
+      const params = new URLSearchParams();
+      if (byId("category-filter").value) params.set("category", byId("category-filter").value);
+      if (byId("status-filter").value) params.set("status", byId("status-filter").value);
+      params.set("limit", "100");
+      try {
+        documents = await request(`${API}/?${params}`);
+        updateSummary();
+        renderDocuments();
+      } catch (error) {
+        byId("result-count").textContent = "Could not load documents";
+        byId("empty-state").hidden = false;
+        byId("empty-state").innerHTML = "";
+        const message = document.createElement("strong");
+        message.textContent = "Service unavailable";
+        byId("empty-state").append(message, document.createTextNode(error.message));
+      }
+    }
+
+    function openDialog(item = null) {
+      form.reset();
+      form.dataset.documentId = item ? String(item.id) : "";
+      byId("dialog-title").textContent = item ? "Edit document" : "Add a document";
+      byId("dialog-description").textContent = item ? "Update the document's details." : "Enter document details or attach a file.";
+      byId("save-document").textContent = item ? "Save changes" : "Save document";
+      byId("file-field").hidden = Boolean(item);
+      if (item) {
+        byId("title").value = item.title;
+        byId("category").value = item.category;
+        byId("source").value = item.source;
+        byId("description").value = item.description || "";
+        if (item.document_date) {
+          const date = new Date(item.document_date);
+          byId("document-date").value = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        }
+      }
+      dialog.showModal();
+      byId("title").focus();
+    }
+
+    async function saveDocument(event) {
+      event.preventDefault();
+      const documentId = form.dataset.documentId;
+      const dateValue = byId("document-date").value;
+      const documentDate = dateValue ? new Date(dateValue).toISOString() : null;
+      const file = byId("file").files[0];
+      const common = {
+        title: byId("title").value.trim(),
+        category: byId("category").value.trim(),
+        source: byId("source").value.trim(),
+        description: byId("description").value.trim() || null,
+        document_date: documentDate
+      };
+
+      const submit = byId("save-document");
+      submit.disabled = true;
+      submit.textContent = "Saving…";
+      try {
+        if (documentId) {
+          await request(`${API}/${documentId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(common)
+          });
+        } else if (file) {
+          const data = new FormData();
+          Object.entries(common).forEach(([key, value]) => {
+            if (value !== null) data.append(key, value);
+          });
+          data.append("file", file);
+          await request(`${API}/upload`, { method: "POST", body: data });
+        } else {
+          await request(`${API}/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(common)
+          });
+        }
+        dialog.close();
+        notify(documentId ? "Document updated." : "Document added.");
+        await loadDocuments();
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        submit.disabled = false;
+        submit.textContent = documentId ? "Save changes" : "Save document";
+      }
+    }
+
+    async function deleteDocument(item) {
+      if (!confirm(`Delete "${item.title}"? This will also remove its uploaded file.`)) return;
+      try {
+        await request(`${API}/${item.id}`, { method: "DELETE" });
+        notify("Document deleted.");
+        await loadDocuments();
+      } catch (error) {
+        notify(error.message, true);
+      }
+    }
+
+    byId("today").textContent = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    byId("add-document").addEventListener("click", () => openDialog());
+    byId("close-dialog").addEventListener("click", () => dialog.close());
+    byId("cancel-dialog").addEventListener("click", () => dialog.close());
+    form.addEventListener("submit", saveDocument);
+    byId("search").addEventListener("input", renderDocuments);
+    byId("category-filter").addEventListener("change", loadDocuments);
+    byId("status-filter").addEventListener("change", loadDocuments);
+    loadDocuments();
+  </script>
+</body>
+</html>
